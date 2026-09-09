@@ -2,11 +2,12 @@ import glob
 import json
 import re
 import sys
+import os
 import xml.etree.ElementTree as ET
 
 fails = []
 
-# 1. no nested button-in-anchor markup anywhere
+# 1. no nested button-in-anchor markup anywhere; no old DHQ branding
 for f in glob.glob('*.html'):
     s = open(f, encoding='utf-8').read()
     if '<button class="cta-button">' in s:
@@ -17,12 +18,12 @@ for f in glob.glob('*.html'):
         fails.append((f, 'demo-duration left'))
     if 'aria-label="Back to top" aria-hidden' in s:
         fails.append((f, 'back-to-top aria-hidden'))
-    if 'vertex-ai' in s.lower():
-        fails.append((f, 'old domain/brand left'))
+    if 'dhqlimited.com' in s:
+        fails.append((f, 'old DHQ domain left'))
+    if 'DHQ' in s:
+        fails.append((f, 'old DHQ brand left'))
     if 'theme-color' not in s:
         fails.append((f, 'theme-color missing'))
-    if 'dhqlimited.com' not in s:
-        fails.append((f, 'dhqlimited.com missing'))
 
 # 2. JSON-LD validity
 blocks = 0
@@ -35,10 +36,12 @@ for f in glob.glob('*.html'):
             fails.append((f, 'jsonld: ' + str(e)))
 
 idx = open('index.html', encoding='utf-8').read()
-if '"@type": "ItemList"' not in idx:
-    fails.append(('index', 'ItemList missing'))
-if 'youtube-nocookie.com' in idx:
-    pass  # dns-prefetch present is fine
+if '\"Product\"' not in idx:
+    fails.append(('index', 'Product JSON-LD missing'))
+if '\"Organization\"' not in idx:
+    fails.append(('index', 'Organization JSON-LD missing'))
+if 'voloai.uk' not in idx:
+    fails.append(('index', 'voloai.uk domain missing'))
 
 # 3. sitemap valid
 try:
@@ -60,6 +63,10 @@ js = open('script.js', encoding='utf-8').read()
 for marker in ('youtube-nocookie.com/embed', 'lastFocused', 'live\\/'):
     if marker.replace('\\/', '/') not in js and marker not in js:
         fails.append(('script.js', 'missing ' + marker))
+
+# 6. og-image exists
+if not os.path.isfile('assets/images/og-image.png'):
+    fails.append(('assets/images/og-image.png', 'missing'))
 
 print('JSON-LD blocks:', blocks)
 print('FAILS:', fails if fails else 'NONE')

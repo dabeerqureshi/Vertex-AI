@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://dhqlimited.com/sitemap.xml
+Sitemap: https://voloai.uk/sitemap.xml
